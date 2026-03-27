@@ -17,69 +17,103 @@ namespace ConnectDB.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<Product>>> GetAll()
         {
             return await _context.Products.ToListAsync();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(int id)
+        public async Task<ActionResult<Product>> GetById(int id)
         {
             var product = await _context.Products.FindAsync(id);
 
             if (product == null)
-                return NotFound();
+                return NotFound("Không tìm thấy sản phẩm");
 
             return product;
         }
 
         [HttpPost]
-        public async Task<ActionResult<Product>> CreateProduct(Product product)
+        public async Task<ActionResult<Product>> Create(Product product)
         {
             if (product.Quantity < 0)
-                return BadRequest("Số lượng không hợp lệ");
+                return BadRequest("Số lượng phải >= 0");
+
+            if (product.ImportPrice < 0 || product.PromotionPrice < 0)
+                return BadRequest("Giá không hợp lệ");
+
+            bool exists = await _context.Products
+                .AnyAsync(p => p.ProductCode == product.ProductCode);
+
+            if (exists)
+                return BadRequest("Mã sản phẩm đã tồn tại");
+
+            bool nameExists = await _context.Products
+                .AnyAsync(p => p.ProductName == product.ProductName);
+
+            if (nameExists)
+                return BadRequest("Tên sản phẩm đã tồn tại");
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+            return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
         }
 
+
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, Product product)
+        public async Task<IActionResult> Update(int id, Product product)
         {
             if (id != product.Id)
-                return BadRequest();
+                return BadRequest("ID không khớp");
 
-            _context.Entry(product).State = EntityState.Modified;
+            var existing = await _context.Products.FindAsync(id);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Products.Any(e => e.Id == id))
-                    return NotFound();
-                else
-                    throw;
-            }
+            if (existing == null)
+                return NotFound("Không tìm thấy sản phẩm");
 
-            return NoContent();
+            bool codeExists = await _context.Products
+                .AnyAsync(p => p.ProductCode == product.ProductCode && p.Id != id);
+
+            if (codeExists)
+                return BadRequest("Mã sản phẩm đã tồn tại");
+
+            bool nameExists = await _context.Products
+                .AnyAsync(p => p.ProductName == product.ProductName && p.Id != id);
+
+            if (nameExists)
+                return BadRequest("Tên sản phẩm đã tồn tại");
+
+            if (product.Quantity < 0)
+                return BadRequest("Số lượng phải >= 0");
+
+            if (product.ImportPrice < 0 || product.PromotionPrice < 0)
+                return BadRequest("Giá không hợp lệ");
+
+            existing.ProductName = product.ProductName;
+            existing.ProductCode = product.ProductCode;
+            existing.Quantity = product.Quantity;
+            existing.ImportPrice = product.ImportPrice;
+            existing.PromotionPrice = product.PromotionPrice;
+            existing.ExpiryDate = product.ExpiryDate;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(existing);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProduct(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var product = await _context.Products.FindAsync(id);
 
             if (product == null)
-                return NotFound();
+                return NotFound("Không tìm thấy sản phẩm");
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok("Xóa thành công");
         }
     }
 }
