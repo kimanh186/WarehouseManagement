@@ -4,6 +4,7 @@ using ConnectDB.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConnectDB.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260403014610_AddWarehouseTables")]
+    partial class AddWarehouseTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,9 +56,8 @@ namespace ConnectDB.Migrations
                     b.Property<int?>("ExportOrderId")
                         .HasColumnType("int");
 
-                    b.Property<string>("ProductCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
@@ -64,7 +66,7 @@ namespace ConnectDB.Migrations
 
                     b.HasIndex("ExportOrderId");
 
-                    b.HasIndex("ProductCode");
+                    b.HasIndex("ProductId");
 
                     b.ToTable("ExportOrderDetails");
                 });
@@ -104,9 +106,8 @@ namespace ConnectDB.Migrations
                     b.Property<decimal>("ImportPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("ProductCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
@@ -115,7 +116,7 @@ namespace ConnectDB.Migrations
 
                     b.HasIndex("ImportOrderId");
 
-                    b.HasIndex("ProductCode");
+                    b.HasIndex("ProductId");
 
                     b.ToTable("ImportOrderDetails");
                 });
@@ -174,15 +175,10 @@ namespace ConnectDB.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<int>("SupplierId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ProductCode")
                         .IsUnique();
-
-                    b.HasIndex("SupplierId");
 
                     b.ToTable("Products");
                 });
@@ -195,9 +191,8 @@ namespace ConnectDB.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ConnectDB.Models.Product", "Product")
-                        .WithMany("ExportOrderDetails")
-                        .HasForeignKey("ProductCode")
-                        .HasPrincipalKey("ProductCode")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -223,24 +218,12 @@ namespace ConnectDB.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ConnectDB.Models.Product", "Product")
-                        .WithMany("ImportOrderDetails")
-                        .HasForeignKey("ProductCode")
-                        .HasPrincipalKey("ProductCode")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("ConnectDB.Models.Product", b =>
-                {
-                    b.HasOne("ConnectDB.Model.Supplier", "Supplier")
-                        .WithMany("Products")
-                        .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("ConnectDB.Model.ExportOrder", b =>
@@ -251,18 +234,6 @@ namespace ConnectDB.Migrations
             modelBuilder.Entity("ConnectDB.Model.ImportOrder", b =>
                 {
                     b.Navigation("Details");
-                });
-
-            modelBuilder.Entity("ConnectDB.Model.Supplier", b =>
-                {
-                    b.Navigation("Products");
-                });
-
-            modelBuilder.Entity("ConnectDB.Models.Product", b =>
-                {
-                    b.Navigation("ExportOrderDetails");
-
-                    b.Navigation("ImportOrderDetails");
                 });
 #pragma warning restore 612, 618
         }

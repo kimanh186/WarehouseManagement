@@ -6,7 +6,8 @@ namespace ConnectDB.Model
     {
         public int Id { get; set; }
 
-        public int ProductId { get; set; }
+        public string ProductCode { get; set; } = string.Empty;
+
         public Product? Product { get; set; }
 
         public int Quantity { get; set; }

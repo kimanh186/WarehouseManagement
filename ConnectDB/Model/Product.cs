@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+﻿using ConnectDB.Model;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 namespace ConnectDB.Models;
 
 public class Product
@@ -14,6 +15,8 @@ public class Product
     [Required]
     [StringLength(200)]
     public string ProductName { get; set; } = string.Empty;
+    public int SupplierId { get; set; }
+    public Supplier? Supplier { get; set; }
 
     public int Quantity { get; set; }
 
@@ -22,4 +25,9 @@ public class Product
     public decimal PromotionPrice { get; set; }
 
     public DateTime ExpiryDate { get; set; }
+    [JsonIgnore]
+    public List<ImportOrderDetail>? ImportOrderDetails { get; set; }
+
+    [JsonIgnore]
+    public List<ExportOrderDetail>? ExportOrderDetails { get; set; }
 }

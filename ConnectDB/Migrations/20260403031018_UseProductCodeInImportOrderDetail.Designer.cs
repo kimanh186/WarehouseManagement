@@ -4,6 +4,7 @@ using ConnectDB.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConnectDB.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260403031018_UseProductCodeInImportOrderDetail")]
+    partial class UseProductCodeInImportOrderDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,9 +56,8 @@ namespace ConnectDB.Migrations
                     b.Property<int?>("ExportOrderId")
                         .HasColumnType("int");
 
-                    b.Property<string>("ProductCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
@@ -64,7 +66,7 @@ namespace ConnectDB.Migrations
 
                     b.HasIndex("ExportOrderId");
 
-                    b.HasIndex("ProductCode");
+                    b.HasIndex("ProductId");
 
                     b.ToTable("ExportOrderDetails");
                 });
@@ -196,8 +198,7 @@ namespace ConnectDB.Migrations
 
                     b.HasOne("ConnectDB.Models.Product", "Product")
                         .WithMany("ExportOrderDetails")
-                        .HasForeignKey("ProductCode")
-                        .HasPrincipalKey("ProductCode")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

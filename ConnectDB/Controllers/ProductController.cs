@@ -19,13 +19,17 @@ namespace ConnectDB.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetAll()
         {
-            return await _context.Products.ToListAsync();
+            return await _context.Products
+                .Include(p => p.Supplier)
+                .ToListAsync();
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetById(int id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                .Include(p => p.Supplier)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
                 return NotFound("Không tìm thấy sản phẩm");
@@ -43,11 +47,11 @@ namespace ConnectDB.Controllers
                 return BadRequest("Giá không hợp lệ");
 
             bool exists = await _context.Products
-                .AnyAsync(p => p.ProductCode == product.ProductCode);
+                .AnyAsync(p => p.ProductCode ==  product.ProductCode);
 
             if (exists)
                 return BadRequest("Mã sản phẩm đã tồn tại");
-
+            
             bool nameExists = await _context.Products
                 .AnyAsync(p => p.ProductName == product.ProductName);
 
@@ -96,6 +100,7 @@ namespace ConnectDB.Controllers
             existing.ImportPrice = product.ImportPrice;
             existing.PromotionPrice = product.PromotionPrice;
             existing.ExpiryDate = product.ExpiryDate;
+            existing.SupplierId = product.SupplierId;
 
             await _context.SaveChangesAsync();
 
