@@ -7,7 +7,19 @@ namespace ConnectDB
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            var options = new WebApplicationOptions
+            {
+                Args = args
+            };
+
+            var builder = WebApplication.CreateBuilder(options);
+
+            builder.Configuration.Sources.Clear();
+
+            builder.Configuration
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false)
+                .AddEnvironmentVariables();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(
@@ -26,6 +38,7 @@ namespace ConnectDB
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
+
             builder.Services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
