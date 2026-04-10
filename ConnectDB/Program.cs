@@ -30,7 +30,7 @@ namespace ConnectDB
             {
                 options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
-                    Title = "Warehouse Management API",
+                    Title = "NguyenLeKimAnh_2123110520I",
                     Version = "v1",
                     Description = "API quản lý kho hàng"
                 });
