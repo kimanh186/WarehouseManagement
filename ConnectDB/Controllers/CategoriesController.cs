@@ -32,7 +32,7 @@ namespace ConnectDB.Controllers
                 return BadRequest("Danh mục đã tồn tại");
 
             _context.Categories.Add(category);
-            await _context.SaveChangesAsynsc();
+            await _context.SaveChangesAsync();
 
             return Ok(category);
         }
