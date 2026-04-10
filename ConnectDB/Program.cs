@@ -26,11 +26,18 @@ namespace ConnectDB
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "Warehouse Management API",
+                    Version = "v1",
+                    Description = "API quản lý kho hàng"
+                });
+            });
 
             var app = builder.Build();
 
-            // luôn bật swagger để giảng viên mở được
             app.UseSwagger();
             app.UseSwaggerUI();
 
