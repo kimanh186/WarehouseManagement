@@ -4,9 +4,9 @@
     {
         public int Id { get; set; }
 
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-        public string Type { get; set; } = string.Empty; // BanHang, Huy, ChuyenKho
+        public string Type { get; set; } = string.Empty;
 
         public List<ExportOrderDetail>? Details { get; set; }
     }

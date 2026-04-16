@@ -20,11 +20,15 @@ namespace ConnectDB.Controllers
         [HttpGet("import-by-date")]
         public async Task<IActionResult> ImportByDate(DateTime date)
         {
+            date = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+
+            var nextDate = date.AddDays(1);
+
             var result = await _context.ImportOrders
                 .Include(x => x.Supplier)
                 .Include(x => x.Details!)
                 .ThenInclude(d => d.Product)
-                .Where(x => x.CreatedDate.Date == date.Date)
+                .Where(x => x.CreatedDate >= date && x.CreatedDate < nextDate)
                 .Select(x => new
                 {
                     x.Id,
@@ -84,7 +88,7 @@ namespace ConnectDB.Controllers
         [HttpGet("expiring-products")]
         public async Task<IActionResult> ExpiringProducts()
         {
-            var today = DateTime.Now;
+            var today = DateTime.UtcNow;
             var next30Days = today.AddDays(30);
 
             var products = await _context.Products

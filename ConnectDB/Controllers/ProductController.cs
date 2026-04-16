@@ -60,6 +60,8 @@ namespace ConnectDB.Controllers
             if (nameExists)
                 return BadRequest("Tên sản phẩm đã tồn tại");
 
+            product.ExpiryDate = DateTime.SpecifyKind(product.ExpiryDate, DateTimeKind.Utc);
+
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
@@ -101,7 +103,7 @@ namespace ConnectDB.Controllers
             existing.Quantity = product.Quantity;
             existing.ImportPrice = product.ImportPrice;
             existing.PromotionPrice = product.PromotionPrice;
-            existing.ExpiryDate = product.ExpiryDate;
+            existing.ExpiryDate = DateTime.SpecifyKind(product.ExpiryDate, DateTimeKind.Utc);
             existing.SupplierId = product.SupplierId;
             existing.CategoryId = product.CategoryId;
 

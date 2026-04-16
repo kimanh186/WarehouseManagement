@@ -47,6 +47,11 @@ namespace ConnectDB.Data
     .WithMany(s => s.Products)
     .HasForeignKey(p => p.SupplierId)
     .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Product>()
+    .HasOne(p => p.Category)
+    .WithMany(c => c.Products)
+    .HasForeignKey(p => p.CategoryId)
+    .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Product>()
     .HasAlternateKey(p => p.ProductCode);

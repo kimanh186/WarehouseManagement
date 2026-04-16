@@ -64,7 +64,7 @@ namespace ConnectDB.Controllers
                 if (product.Quantity < detail.Quantity)
                     return BadRequest($"Sản phẩm {product.ProductName} không đủ tồn kho");
 
-                if (order.Type == "BanHang" && product.ExpiryDate < DateTime.Now)
+                if (order.Type == "BanHang" && product.ExpiryDate < DateTime.UtcNow)
                     return BadRequest($"Sản phẩm {product.ProductName} đã hết hạn, không được bán");
 
                 product.Quantity -= detail.Quantity;
@@ -72,7 +72,7 @@ namespace ConnectDB.Controllers
                 detail.Product = product;
             }
 
-            order.CreatedDate = DateTime.Now;
+            order.CreatedDate = DateTime.UtcNow;
 
             _context.ExportOrders.Add(order);
             await _context.SaveChangesAsync();

@@ -72,7 +72,7 @@ namespace ConnectDB.Controllers
                 detail.Product = product;
             }
 
-            order.CreatedDate = DateTime.Now;
+            order.CreatedDate = DateTime.UtcNow;
 
             _context.ImportOrders.Add(order);
             await _context.SaveChangesAsync();
