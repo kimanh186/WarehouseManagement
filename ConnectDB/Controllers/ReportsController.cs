@@ -93,7 +93,9 @@ namespace ConnectDB.Controllers
 
             var products = await _context.Products
                 .Include(p => p.Supplier)
-                .Where(p => p.ExpiryDate >= today && p.ExpiryDate <= next30Days)
+                //.Where(p => p.ExpiryDate >= today && p.ExpiryDate <= next30Days)
+                .Where(p => p.ExpiryDate <= next30Days)
+
                 .Select(p => new
                 {
                     p.Id,
@@ -102,7 +104,8 @@ namespace ConnectDB.Controllers
                     p.Quantity,
                     p.ExpiryDate,
                     Supplier = p.Supplier!.SupplierName,
-                    DaysLeft = (p.ExpiryDate - today).Days
+                    DaysLeft = (p.ExpiryDate - today).Days,
+                    Status = p.ExpiryDate < today ? "Đã hết hạn" : "Sắp hết hạn"
                 })
                 .OrderBy(p => p.DaysLeft)
                 .ToListAsync();
@@ -111,7 +114,6 @@ namespace ConnectDB.Controllers
         }
 
         // Sản phẩm hết hàng hoặc gần hết hàng
-        // Ví dụ: /api/reports/out-of-stock
         [HttpGet("out-of-stock")]
         public async Task<IActionResult> OutOfStock()
         {
@@ -131,6 +133,61 @@ namespace ConnectDB.Controllers
                 .ToListAsync();
 
             return Ok(products);
+        }
+
+        [HttpGet("export-by-date")]
+        public async Task<IActionResult> ExportByDate(DateTime date)
+        {
+            date = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+            var nextDate = date.AddDays(1);
+
+            var result = await _context.ExportOrders
+                .Include(x => x.Details!)
+                .ThenInclude(d => d.Product)
+                .Where(x => x.CreatedDate >= date && x.CreatedDate < nextDate)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.CreatedDate,
+                    Reason = x.Reason,
+                    TotalQuantity = x.Details!.Sum(d => d.Quantity),
+                    Products = x.Details.Select(d => new
+                    {
+                        d.ProductCode,
+                        ProductName = d.Product!.ProductName,
+                        d.Quantity
+                    })
+                })
+                .ToListAsync();
+
+            return Ok(result);
+        }
+        [HttpGet("export-by-month")]
+        public async Task<IActionResult> ExportByMonth(int month, int year)
+        {
+            var result = await _context.ExportOrders
+                .Include(x => x.Details!)
+                .ThenInclude(d => d.Product)
+                .Where(x => x.CreatedDate.Month == month && x.CreatedDate.Year == year)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.CreatedDate,
+                    Reason = x.Reason,
+                    TotalQuantity = x.Details!.Sum(d => d.Quantity)
+                })
+                .ToListAsync();
+
+            var totalQuantity = result.Sum(x => x.TotalQuantity);
+
+            return Ok(new
+            {
+                Month = month,
+                Year = year,
+                TotalExportOrders = result.Count,
+                TotalQuantity = totalQuantity,
+                Data = result
+            });
         }
     }
 }

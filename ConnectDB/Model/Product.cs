@@ -28,6 +28,7 @@ public class Product
     public decimal PromotionPrice { get; set; }
 
     public DateTime ExpiryDate { get; set; }
+    public string? ImageUrl { get; set; }
     [JsonIgnore]
     public List<ImportOrderDetail>? ImportOrderDetails { get; set; }
 

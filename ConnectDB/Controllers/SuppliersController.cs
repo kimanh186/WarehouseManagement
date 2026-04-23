@@ -34,7 +34,7 @@ namespace ConnectDB.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Supplier>> Create(Supplier supplier)
+        public async Task<IActionResult> Create(Supplier supplier)
         {
             if (string.IsNullOrWhiteSpace(supplier.SupplierName))
                 return BadRequest("Tên nhà cung cấp không được để trống");
@@ -48,7 +48,11 @@ namespace ConnectDB.Controllers
             _context.Suppliers.Add(supplier);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = supplier.Id }, supplier);
+            return Ok(new
+            {
+                message = "Thêm nhà cung cấp thành công",
+                data = supplier
+            });
         }
 
         [HttpPut("{id}")]
@@ -62,12 +66,19 @@ namespace ConnectDB.Controllers
             if (existing == null)
                 return NotFound("Không tìm thấy nhà cung cấp");
 
+            if (string.IsNullOrWhiteSpace(supplier.SupplierName))
+                return BadRequest("Tên nhà cung cấp không được để trống");
+
             existing.SupplierName = supplier.SupplierName;
             existing.Phone = supplier.Phone;
 
             await _context.SaveChangesAsync();
 
-            return Ok(existing);
+            return Ok(new
+            {
+                message = "Cập nhật nhà cung cấp thành công",
+                data = existing
+            });
         }
 
         [HttpDelete("{id}")]

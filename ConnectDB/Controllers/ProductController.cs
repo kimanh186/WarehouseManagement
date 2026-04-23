@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ConnectDB.Data;
+﻿using ConnectDB.Data;
+using ConnectDB.DTO;
 using ConnectDB.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 namespace ConnectDB.Controllers
 {
@@ -39,73 +42,111 @@ namespace ConnectDB.Controllers
             return product;
         }
 
+
         [HttpPost]
-        public async Task<ActionResult<Product>> Create(Product product)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Create([FromForm] ProductCreateDto dto)
         {
-            if (product.Quantity < 0)
+            var product = new Product
+            {
+                ProductCode = dto.ProductCode,
+                ProductName = dto.ProductName,
+                SupplierId = dto.SupplierId,
+                CategoryId = dto.CategoryId,
+                Quantity = dto.Quantity,
+                ImportPrice = dto.ImportPrice,
+                PromotionPrice = dto.PromotionPrice,
+                ExpiryDate = DateTime.SpecifyKind(dto.ExpiryDate, DateTimeKind.Utc)
+            };
+            if (dto.Quantity < 0)
                 return BadRequest("Số lượng phải >= 0");
 
-            if (product.ImportPrice < 0 || product.PromotionPrice < 0)
+            if (dto.ImportPrice < 0 || dto.PromotionPrice < 0)
                 return BadRequest("Giá không hợp lệ");
 
-            bool exists = await _context.Products
-                .AnyAsync(p => p.ProductCode ==  product.ProductCode);
-
-            if (exists)
-                return BadRequest("Mã sản phẩm đã tồn tại");
-            
-            bool nameExists = await _context.Products
-                .AnyAsync(p => p.ProductName == product.ProductName);
-
-            if (nameExists)
-                return BadRequest("Tên sản phẩm đã tồn tại");
-
-            product.ExpiryDate = DateTime.SpecifyKind(product.ExpiryDate, DateTimeKind.Utc);
-
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
-        }
-
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Product product)
-        {
-            if (id != product.Id)
-                return BadRequest("ID không khớp");
-
-            var existing = await _context.Products.FindAsync(id);
-
-            if (existing == null)
-                return NotFound("Không tìm thấy sản phẩm");
-
             bool codeExists = await _context.Products
-                .AnyAsync(p => p.ProductCode == product.ProductCode && p.Id != id);
+                .AnyAsync(p => p.ProductCode == dto.ProductCode);
 
             if (codeExists)
                 return BadRequest("Mã sản phẩm đã tồn tại");
 
             bool nameExists = await _context.Products
-                .AnyAsync(p => p.ProductName == product.ProductName && p.Id != id);
+                .AnyAsync(p => p.ProductName == dto.ProductName);
 
             if (nameExists)
                 return BadRequest("Tên sản phẩm đã tồn tại");
 
-            if (product.Quantity < 0)
+            if (dto.Image != null)
+            {
+                var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                Directory.CreateDirectory(folder);
+
+                var fileName = Guid.NewGuid() + Path.GetExtension(dto.Image.FileName);
+                var path = Path.Combine(folder, fileName);
+
+                using var stream = new FileStream(path, FileMode.Create);
+                await dto.Image.CopyToAsync(stream);
+
+                product.ImageUrl = "/images/" + fileName;
+            }
+
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            return Ok(product);
+        }
+
+
+      
+        [HttpPut("{id}")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> Update(int id, [FromForm] ProductUpdateDto dto)
+        {
+            var existing = await _context.Products.FindAsync(id);
+            if (existing == null)
+                return NotFound();
+
+            // map dữ liệu
+            existing.ProductName = dto.ProductName;
+            existing.ProductCode = dto.ProductCode;
+            existing.Quantity = dto.Quantity;
+            existing.ImportPrice = dto.ImportPrice;
+            existing.PromotionPrice = dto.PromotionPrice;
+            existing.SupplierId = dto.SupplierId;
+            existing.CategoryId = dto.CategoryId;
+            existing.ExpiryDate = DateTime.SpecifyKind(dto.ExpiryDate, DateTimeKind.Utc);
+            if (dto.Quantity < 0)
                 return BadRequest("Số lượng phải >= 0");
 
-            if (product.ImportPrice < 0 || product.PromotionPrice < 0)
+            if (dto.ImportPrice < 0 || dto.PromotionPrice < 0)
                 return BadRequest("Giá không hợp lệ");
 
-            existing.ProductName = product.ProductName;
-            existing.ProductCode = product.ProductCode;
-            existing.Quantity = product.Quantity;
-            existing.ImportPrice = product.ImportPrice;
-            existing.PromotionPrice = product.PromotionPrice;
-            existing.ExpiryDate = DateTime.SpecifyKind(product.ExpiryDate, DateTimeKind.Utc);
-            existing.SupplierId = product.SupplierId;
-            existing.CategoryId = product.CategoryId;
+            bool codeExists = await _context.Products
+                .AnyAsync(p => p.ProductCode == dto.ProductCode && p.Id != id);
+
+            if (codeExists)
+                return BadRequest("Mã sản phẩm đã tồn tại");
+
+            bool nameExists = await _context.Products
+                .AnyAsync(p => p.ProductName == dto.ProductName && p.Id != id);
+
+            if (nameExists)
+                return BadRequest("Tên sản phẩm đã tồn tại");
+
+            // xử lý ảnh
+            if (dto.Image != null)
+            {
+                var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                Directory.CreateDirectory(folder);
+
+                var fileName = Guid.NewGuid() + Path.GetExtension(dto.Image.FileName);
+                var path = Path.Combine(folder, fileName);
+
+                using var stream = new FileStream(path, FileMode.Create);
+                await dto.Image.CopyToAsync(stream);
+
+                existing.ImageUrl = "/images/" + fileName;
+            }
 
             await _context.SaveChangesAsync();
 

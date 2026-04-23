@@ -42,10 +42,14 @@ namespace ConnectDB.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ExportOrder order)
         {
-            var validTypes = new[] { "BanHang", "Huy", "ChuyenKho" };
+            if (string.IsNullOrEmpty(order.Reason))
+                return BadRequest("Vui lòng nhập lý do xuất");
 
-            if (!validTypes.Contains(order.Type))
-                return BadRequest("Loại xuất chỉ được: BanHang, Huy, ChuyenKho");
+            var validReasons = new[] { "sale", "internal", "damaged", "transfer" };
+            var reason = order.Reason.ToLower();
+
+            if (!validReasons.Contains(reason))
+                return BadRequest("Lý do xuất phải là: sale, internal, damaged, transfer");
 
             if (order.Details == null || !order.Details.Any())
                 return BadRequest("Phiếu xuất phải có ít nhất 1 sản phẩm");
@@ -56,16 +60,19 @@ namespace ConnectDB.Controllers
                     .FirstOrDefaultAsync(p => p.ProductCode == detail.ProductCode);
 
                 if (product == null)
-                    return BadRequest($"Không tìm thấy sản phẩm có mã {detail.ProductCode}");
+                    return BadRequest($"Không tìm thấy sản phẩm {detail.ProductCode}");
 
                 if (detail.Quantity <= 0)
-                    return BadRequest("Số lượng xuất phải > 0");
+                    return BadRequest("Số lượng phải > 0");
 
                 if (product.Quantity < detail.Quantity)
                     return BadRequest($"Sản phẩm {product.ProductName} không đủ tồn kho");
 
-                if (order.Type == "BanHang" && product.ExpiryDate < DateTime.UtcNow)
-                    return BadRequest($"Sản phẩm {product.ProductName} đã hết hạn, không được bán");
+                // 🔥 chỉ check hạn nếu KHÔNG phải hàng hỏng
+                if (reason != "damaged" && product.ExpiryDate < DateTime.UtcNow)
+                {
+                    return BadRequest($"Sản phẩm {product.ProductName} đã hết hạn");
+                }
 
                 product.Quantity -= detail.Quantity;
 
@@ -73,6 +80,7 @@ namespace ConnectDB.Controllers
             }
 
             order.CreatedDate = DateTime.UtcNow;
+            order.Status = "completed";
 
             _context.ExportOrders.Add(order);
             await _context.SaveChangesAsync();
@@ -84,6 +92,21 @@ namespace ConnectDB.Controllers
             });
         }
 
+        [HttpPut("{id}/print")]
+        public async Task<IActionResult> MarkAsPrinted(int id)
+        {
+            var order = await _context.ExportOrders.FindAsync(id);
+
+            if (order == null)
+                return NotFound("Không tìm thấy phiếu");
+
+            order.IsPrinted = true;
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Đã đánh dấu đã in");
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -93,6 +116,10 @@ namespace ConnectDB.Controllers
 
             if (order == null)
                 return NotFound("Không tìm thấy phiếu xuất");
+
+            //  chặn xóa
+            if (order.IsPrinted)
+                return BadRequest("Phiếu đã in, không được xóa");
 
             foreach (var detail in order.Details!)
             {

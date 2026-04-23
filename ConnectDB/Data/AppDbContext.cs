@@ -20,6 +20,7 @@ namespace ConnectDB.Data
 
         public DbSet<ExportOrder> ExportOrders { get; set; }
         public DbSet<ExportOrderDetail> ExportOrderDetails { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -67,9 +68,9 @@ namespace ConnectDB.Data
     .WithMany(p => p.ExportOrderDetails)
     .HasForeignKey(d => d.ProductCode)
     .HasPrincipalKey(p => p.ProductCode);
+
+           
         }
-
-
 
     }
 }

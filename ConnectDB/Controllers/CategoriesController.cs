@@ -25,6 +25,9 @@ namespace ConnectDB.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Category category)
         {
+            if (string.IsNullOrWhiteSpace(category.CategoryName))
+                return BadRequest("Tên danh mục không được để trống");
+
             bool exists = await _context.Categories
                 .AnyAsync(x => x.CategoryName == category.CategoryName);
 
@@ -34,24 +37,35 @@ namespace ConnectDB.Controllers
             _context.Categories.Add(category);
             await _context.SaveChangesAsync();
 
-            return Ok(category);
+            return Ok(new
+            {
+                message = "Thêm danh mục thành công",
+                data = category
+            });
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, Category category)
         {
             if (id != category.Id)
-                return BadRequest();
+                return BadRequest("ID không khớp");
 
             var existing = await _context.Categories.FindAsync(id);
 
             if (existing == null)
-                return NotFound();
+                return NotFound("Không tìm thấy danh mục");
+
+            if (string.IsNullOrWhiteSpace(category.CategoryName))
+                return BadRequest("Tên danh mục không được để trống");
 
             existing.CategoryName = category.CategoryName;
             await _context.SaveChangesAsync();
 
-            return Ok(existing);
+            return Ok(new
+            {
+                message = "Cập nhật danh mục thành công",
+                data = existing
+            });
         }
 
         [HttpDelete("{id}")]
@@ -65,7 +79,10 @@ namespace ConnectDB.Controllers
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
 
-            return Ok("Xóa danh mục thành công");
+            return Ok(new
+            {
+                message = "Xóa danh mục thành công"
+            });
         }
     }
 }

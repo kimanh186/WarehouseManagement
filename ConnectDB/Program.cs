@@ -56,6 +56,8 @@ namespace ConnectDB
 
             app.UseHttpsRedirection();
 
+            app.UseStaticFiles();
+
             app.UseCors("AllowAll");
 
             app.UseAuthorization();

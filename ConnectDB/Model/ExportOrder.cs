@@ -6,7 +6,9 @@
 
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-        public string Type { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+        public string Status { get; set; } = "completed";
+        public bool IsPrinted { get; set; } = false;
 
         public List<ExportOrderDetail>? Details { get; set; }
     }
