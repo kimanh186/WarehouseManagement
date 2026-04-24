@@ -10,5 +10,7 @@
         public Supplier? Supplier { get; set; }
 
         public List<ImportOrderDetail>? Details { get; set; }
+
+        public bool IsPrinted { get; set; } = false;
     }
 }

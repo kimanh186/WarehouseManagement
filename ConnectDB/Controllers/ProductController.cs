@@ -1,6 +1,7 @@
 ﻿using ConnectDB.Data;
 using ConnectDB.DTO;
 using ConnectDB.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -41,7 +42,6 @@ namespace ConnectDB.Controllers
 
             return product;
         }
-
 
         [HttpPost]
         [Consumes("multipart/form-data")]
@@ -97,7 +97,6 @@ namespace ConnectDB.Controllers
         }
 
 
-      
         [HttpPut("{id}")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Update(int id, [FromForm] ProductUpdateDto dto)

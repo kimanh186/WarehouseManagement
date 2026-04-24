@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ConnectDB.Data;
+﻿using ConnectDB.Data;
 using ConnectDB.Model;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConnectDB.Controllers
 {
@@ -83,7 +84,6 @@ namespace ConnectDB.Controllers
                 data = order
             });
         }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -94,6 +94,9 @@ namespace ConnectDB.Controllers
             if (order == null)
                 return NotFound("Không tìm thấy phiếu nhập");
 
+            if (order.IsPrinted)
+                return BadRequest("Phiếu đã in, không được xóa");
+
             foreach (var detail in order.Details!)
             {
                 var product = await _context.Products
@@ -102,7 +105,7 @@ namespace ConnectDB.Controllers
                 if (product != null)
                 {
                     if (product.Quantity < detail.Quantity)
-                        return BadRequest("Không thể xóa vì tồn kho hiện tại không đủ để rollback");
+                        return BadRequest("Không thể xóa vì tồn kho không đủ");
 
                     product.Quantity -= detail.Quantity;
                 }
@@ -111,7 +114,27 @@ namespace ConnectDB.Controllers
             _context.ImportOrders.Remove(order);
             await _context.SaveChangesAsync();
 
-            return Ok("Xóa phiếu nhập thành công");
+            return Ok(new
+            {
+                message = "Xóa phiếu nhập thành công"
+            });
+        }
+        [HttpPut("{id}/print")]
+        public async Task<IActionResult> MarkAsPrinted(int id)
+        {
+            var order = await _context.ImportOrders.FindAsync(id);
+
+            if (order == null)
+                return NotFound("Không tìm thấy phiếu");
+
+            order.IsPrinted = true;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Đã đánh dấu đã in"
+            });
         }
     }
 }

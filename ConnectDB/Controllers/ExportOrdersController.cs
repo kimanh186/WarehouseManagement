@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ConnectDB.Data;
+﻿using ConnectDB.Data;
 using ConnectDB.Model;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConnectDB.Controllers
 {
@@ -68,7 +69,6 @@ namespace ConnectDB.Controllers
                 if (product.Quantity < detail.Quantity)
                     return BadRequest($"Sản phẩm {product.ProductName} không đủ tồn kho");
 
-                // 🔥 chỉ check hạn nếu KHÔNG phải hàng hỏng
                 if (reason != "damaged" && product.ExpiryDate < DateTime.UtcNow)
                 {
                     return BadRequest($"Sản phẩm {product.ProductName} đã hết hạn");
@@ -135,7 +135,10 @@ namespace ConnectDB.Controllers
             _context.ExportOrders.Remove(order);
             await _context.SaveChangesAsync();
 
-            return Ok("Xóa phiếu xuất thành công");
+            return Ok(new
+            {
+                message = "Xóa phiếu xuất thành công"
+            });
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ConnectDB.Data;
 using ConnectDB.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,13 +16,11 @@ namespace ConnectDB.Controllers
         {
             _context = context;
         }
-
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Category>>> GetAll()
         {
             return await _context.Categories.ToListAsync();
         }
-
         [HttpPost]
         public async Task<IActionResult> Create(Category category)
         {
@@ -43,7 +42,6 @@ namespace ConnectDB.Controllers
                 data = category
             });
         }
-
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, Category category)
         {
@@ -67,7 +65,6 @@ namespace ConnectDB.Controllers
                 data = existing
             });
         }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

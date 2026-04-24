@@ -20,6 +20,7 @@ namespace ConnectDB.Data
 
         public DbSet<ExportOrder> ExportOrders { get; set; }
         public DbSet<ExportOrderDetail> ExportOrderDetails { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -69,7 +70,19 @@ namespace ConnectDB.Data
     .HasForeignKey(d => d.ProductCode)
     .HasPrincipalKey(p => p.ProductCode);
 
-           
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.Property(u => u.Username)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(u => u.PasswordHash)
+                    .IsRequired();
+
+                entity.HasIndex(u => u.Username)
+                    .IsUnique();
+            });
+
         }
 
     }

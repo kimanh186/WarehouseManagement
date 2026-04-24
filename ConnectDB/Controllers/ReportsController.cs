@@ -1,4 +1,5 @@
 ﻿using ConnectDB.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,8 +16,6 @@ namespace ConnectDB.Controllers
             _context = context;
         }
 
-        // Báo cáo nhập hàng theo ngày
-        // Ví dụ: /api/reports/import-by-date?date=2026-04-10
         [HttpGet("import-by-date")]
         public async Task<IActionResult> ImportByDate(DateTime date)
         {
@@ -49,8 +48,6 @@ namespace ConnectDB.Controllers
             return Ok(result);
         }
 
-        // Báo cáo nhập hàng theo tháng
-        // Ví dụ: /api/reports/import-by-month?month=4&year=2026
         [HttpGet("import-by-month")]
         public async Task<IActionResult> ImportByMonth(int month, int year)
         {
@@ -83,8 +80,6 @@ namespace ConnectDB.Controllers
             });
         }
 
-        // Sản phẩm sắp hết hạn trong 30 ngày
-        // Ví dụ: /api/reports/expiring-products
         [HttpGet("expiring-products")]
         public async Task<IActionResult> ExpiringProducts()
         {
@@ -113,7 +108,6 @@ namespace ConnectDB.Controllers
             return Ok(products);
         }
 
-        // Sản phẩm hết hàng hoặc gần hết hàng
         [HttpGet("out-of-stock")]
         public async Task<IActionResult> OutOfStock()
         {
@@ -162,6 +156,7 @@ namespace ConnectDB.Controllers
 
             return Ok(result);
         }
+
         [HttpGet("export-by-month")]
         public async Task<IActionResult> ExportByMonth(int month, int year)
         {

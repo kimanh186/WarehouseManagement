@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ConnectDB.Data;
+﻿using ConnectDB.Data;
 using ConnectDB.Model;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConnectDB.Controllers
 {
@@ -15,7 +16,6 @@ namespace ConnectDB.Controllers
         {
             _context = context;
         }
-
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Supplier>>> GetAll()
         {
@@ -32,7 +32,6 @@ namespace ConnectDB.Controllers
 
             return supplier;
         }
-
         [HttpPost]
         public async Task<IActionResult> Create(Supplier supplier)
         {
@@ -54,7 +53,7 @@ namespace ConnectDB.Controllers
                 data = supplier
             });
         }
-
+        
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, Supplier supplier)
         {

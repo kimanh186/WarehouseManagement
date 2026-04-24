@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ConnectDB.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace ConnectDB
 {
@@ -14,7 +17,7 @@ namespace ConnectDB
 
             var builder = WebApplication.CreateBuilder(options);
 
-            builder.Configuration.Sources.Clear();
+            //builder.Configuration.Sources.Clear();
 
             builder.Configuration
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
@@ -47,7 +50,48 @@ namespace ConnectDB
                     Version = "v1",
                     Description = "API quản lý kho hàng"
                 });
+
+                options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Description = "Nhập: Bearer {token}"
+                });
+
+                options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
             });
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key)
+        };
+    });
+
+            builder.Services.AddAuthorization();
 
             var app = builder.Build();
 
@@ -60,9 +104,34 @@ namespace ConnectDB
 
             app.UseCors("AllowAll");
 
+            app.UseAuthentication();
+
             app.UseAuthorization();
 
             app.MapControllers();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>(); 
+
+                var admin = context.Users.FirstOrDefault(x => x.Username == "admin");
+
+                if (admin == null)
+                {
+                    context.Users.Add(new ConnectDB.Models.User
+                    {
+                        Username = "admin",
+                        PasswordHash = ConnectDB.Helpers.PasswordHelper.Hash("123456"),
+                        Role = "Admin"
+                    });
+                }
+                else
+                {
+                    admin.Role = "Admin"; 
+                }
+
+                context.SaveChanges();
+            }
 
             app.Run();
         }
