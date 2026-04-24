@@ -53,13 +53,12 @@ namespace ConnectDB.Controllers
                 ProductName = dto.ProductName,
                 SupplierId = dto.SupplierId,
                 CategoryId = dto.CategoryId,
-                Quantity = dto.Quantity,
+                Quantity = 0,
                 ImportPrice = dto.ImportPrice,
                 PromotionPrice = dto.PromotionPrice,
                 ExpiryDate = DateTime.SpecifyKind(dto.ExpiryDate, DateTimeKind.Utc)
             };
-            if (dto.Quantity < 0)
-                return BadRequest("Số lượng phải >= 0");
+
 
             if (dto.ImportPrice < 0 || dto.PromotionPrice < 0)
                 return BadRequest("Giá không hợp lệ");
@@ -108,14 +107,12 @@ namespace ConnectDB.Controllers
             // map dữ liệu
             existing.ProductName = dto.ProductName;
             existing.ProductCode = dto.ProductCode;
-            existing.Quantity = dto.Quantity;
             existing.ImportPrice = dto.ImportPrice;
             existing.PromotionPrice = dto.PromotionPrice;
             existing.SupplierId = dto.SupplierId;
             existing.CategoryId = dto.CategoryId;
             existing.ExpiryDate = DateTime.SpecifyKind(dto.ExpiryDate, DateTimeKind.Utc);
-            if (dto.Quantity < 0)
-                return BadRequest("Số lượng phải >= 0");
+
 
             if (dto.ImportPrice < 0 || dto.PromotionPrice < 0)
                 return BadRequest("Giá không hợp lệ");
